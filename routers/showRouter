@@ -1,0 +1,92 @@
+const express = require ("express")
+const { User, Show } = require('../models'); // Ensure you're importing both models
+const Sequelize = (require("sequelize"))
+
+const router = express.Router()
+
+//The show Router should GET all the users using an endpoint. 
+router.get("/", async (req,res) => {
+    const shows = await Show.findAll({})
+    res.json(shows)
+})
+
+//The show Router should GET one user using an endpoint with a param. 
+router.get("/:id", async (req,res) => {
+    const id = req.params.id
+    const show = await Show.findByPk(id)
+    res.json(show)
+})
+
+//The Show Router should GET all the users who have watched a show using an endpoint with a param
+router.get("/:id/users", async (req,res) => {
+    const id = req.params.id; // Extract id from request parameters
+    const show = await Show.findByPk(id, { include: User });
+    res.json(show.users)
+})
+
+// The Show Router should toggle the available property of a show
+router.put("/:id/available", async (req, res) => {
+    const id = req.params.id; // Extract id from request parameters
+
+
+        // Find the show by its ID
+        const show = await Show.findByPk(id);
+
+        // Ensure the 'available' value is checked explicitly
+        let newAvailableStatus;
+        if (show.available === true) {
+            newAvailableStatus = false; // Set to unavailable
+        } else {
+            newAvailableStatus = true; // Set to available
+        }
+
+        // Update the 'available' property in the database
+        await Show.update({ available: newAvailableStatus }, { where:  id  });
+
+        // Send response with the updated status
+        res.status(200).json({ message: "Show availability updated", available: newAvailableStatus });
+    
+});
+
+// The Show Router should DELETE a show using an endpoint with a param
+router.delete("/:id", async (req, res) => {
+    const  id  = req.params.id; 
+
+        const show = await Show.findByPk(id);
+        await show.destroy();
+
+        res.status(200).json({ message: "Show deleted successfully" });
+    
+});
+
+
+//This don't work man
+/*router.get("/:genre", async (req, res) => {
+    const genre = req.params.genre; // Extract genre from request parameters
+    console.log("Request parameters:", req.params); // Log the entire params object
+    console.log("Requested genre:", genre); // Log the requested genre
+
+    try {
+        const shows = await Show.findAll({
+            where: { genre } // Filtering by genre
+        });
+
+        // If no shows are found, return a message
+        if (shows.length === 0) {
+            return res.status(404).json({ message: "No shows found for this genre" });
+        }
+
+        res.status(200).json(shows); // Return the array of shows
+    } catch (error) {
+        console.error("Error fetching shows by genre:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+});*/
+
+
+
+
+
+
+
+module.exports = router;

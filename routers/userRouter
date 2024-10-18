@@ -1,0 +1,51 @@
+const express = require ("express")
+const { User, Show } = require('../models'); // Ensure you're importing both models
+const Sequelize = (require("sequelize"))
+
+const router = express.Router()
+
+//The User Router should GET all the users using an endpoint. 
+router.get("/", async (req,res) => {
+    const users = await User.findAll({})
+    res.json(users)
+})
+
+//The User Router should GET one user using an endpoint with a param. 
+router.get("/:id", async (req,res) => {
+    const id = req.params.id
+    const user = await User.findByPk(id)
+    res.json(user)
+})
+
+router.get("/:id/shows", async (req, res) => {
+    const id = req.params.id; // Extract id from request parameters
+   
+        // Find the user by id and include their shows
+        const user = await User.findByPk(id, { include: Show });
+        res.json(user.shows); // Return the shows the user has watched   
+})
+
+router.put("/:userId/shows/:showId", async (req, res) => {
+    const { userId, showId } = req.params; // Extract userId and showId from request parameters
+
+        // Find the user by userId
+        const user = await User.findByPk(userId);
+        
+
+        // Find the show by showId
+        const show = await Show.findByPk(showId);
+    
+        await user.addShow(showId); 
+
+        res.status(200).json({ message: "Show marked as watched by user" });
+    
+});
+
+
+
+
+
+
+
+
+module.exports = router;
